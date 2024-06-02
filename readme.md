@@ -17,11 +17,11 @@ Case 2 :
 
 ![](./docs/bricks_50.png)
 
-![](./docs/bricks_30.png)
-
 ![](./docs/bricks_20.png)
 
 ![](./docs/bricks_10.png)
+
+![](./docs/bricks_5.png)
 
 ## Test : 
 
