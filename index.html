@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Detection in Electrical Grid</title>
+    <style>
+        .node {
+            fill: #1f77b4;
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+        .link {
+            fill: none;
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+        .cycle {
+            stroke: red;
+            stroke-width: 3px;
+        }
+        text {
+            fill: #000;
+            font: 14px sans-serif;
+            pointer-events: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script>
+        class Graph {
+            constructor(vertices) {
+                this.vertices = vertices;
+                this.graph = new Map();
+                for (let i = 0; i < vertices; i++) {
+                    this.graph.set(i, []);
+                }
+            }
+
+            addEdge(u, v) {
+                this.graph.get(u).push(v);
+            }
+
+            // Helper function for DFS and cycle detection
+            helper(v, visited, recStack, cycleEdges) {
+                visited[v] = true;
+                recStack[v] = true;
+
+                for (let neighbor of this.graph.get(v)) {
+                    if (recStack[neighbor]) {
+                        cycleEdges.push([v, neighbor]);
+                        return true;
+                    } else if (!visited[neighbor]) {
+                        if (this.helper(neighbor, visited, recStack, cycleEdges)) {
+                            cycleEdges.push([v, neighbor]);
+                            return true;
+                        }
+                    }
+                }
+
+                recStack[v] = false;
+                return false;
+            }
+
+            isCyclic() {
+                let visited = Array(this.vertices).fill(false);
+                let recStack = Array(this.vertices).fill(false);
+                let cycleEdges = [];
+
+                for (let node = 0; node < this.vertices; node++) {
+                    if (!visited[node]) {
+                        if (this.helper(node, visited, recStack, cycleEdges)) {
+                            return cycleEdges;
+                        }
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        // Example electrical grid with 6 nodes
+        const graph = new Graph(6);
+        graph.addEdge(0, 1);
+        graph.addEdge(1, 2);
+        graph.addEdge(2, 3);
+        graph.addEdge(3, 4);
+        graph.addEdge(4, 2); // This edge creates a cycle
+        graph.addEdge(4, 5);
+
+        const cycleEdges = graph.isCyclic();
+
+        const nodes = [
+            { id: 0, name: "Station A" },
+            { id: 1, name: "Station B" },
+            { id: 2, name: "Station C" },
+            { id: 3, name: "Station D" },
+            { id: 4, name: "Station E" },
+            { id: 5, name: "Station F" }
+        ];
+
+        const links = [];
+        graph.graph.forEach((value, key) => {
+            value.forEach(v => {
+                links.push({ source: key, target: v });
+            });
+        });
+
+        const svg = d3.select("body").append("svg");
+
+        const link = svg.selectAll(".link")
+            .data(links)
+            .enter().append("line")
+            .attr("class", "link")
+            .attr("marker-end", "url(#arrow)");
+
+        const node = svg.selectAll(".node")
+            .data(nodes)
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("r", 10)
+            .call(d3.drag());
+
+        const labels = svg.selectAll(".label")
+            .data(nodes)
+            .enter().append("text")
+            .attr("class", "label")
+            .text(d => d.name);
+
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(150))
+            .force("charge", d3.forceManyBody().strength(-400))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .on("tick", ticked);
+
+        function ticked() {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y)
+                .attr("class", d => cycleEdges && cycleEdges.some(edge => edge[0] === d.source.id && edge[1] === d.target.id) ? "link cycle" : "link");
+
+            node
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+
+            labels
+                .attr("x", d => d.x + 15)
+                .attr("y", d => d.y + 5);
+        }
+
+        svg.append("defs").selectAll("marker")
+            .data(["end"])
+            .enter().append("marker")
+            .attr("id", String)
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 15)
+            .attr("refY", 0)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M0,-5L10,0L0,5");
+    </script>
+</body>
+</html>
