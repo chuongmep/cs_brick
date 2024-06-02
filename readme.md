@@ -15,13 +15,13 @@ Case 1 :
 
 Case 2 : 
 
-![](./docs/cas2_50.png)
+![](./docs/bricks_50.png)
 
-![](./docs/cas2_30.png.png)
+![](./docs/bricks_30.png)
 
-![](./docs/cas2_20.png)
+![](./docs/bricks_20.png)
 
-![](./docs/cas2_10.png)
+![](./docs/bricks_10.png)
 
 ## Test : 
 
